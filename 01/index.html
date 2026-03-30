@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Риск-реестр проекта</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0e0e11;
+  --surface: #18181c;
+  --surface2: #1f1f25;
+  --border: #2a2a33;
+  --text: #e4e4e8;
+  --muted: #8b8b96;
+  --accent: #6c8cff;
+  --accent-dim: rgba(108,140,255,0.12);
+
+  --green: #34d399;
+  --green-bg: rgba(52,211,153,0.10);
+  --yellow: #fbbf24;
+  --yellow-bg: rgba(251,191,36,0.10);
+  --orange: #f97316;
+  --orange-bg: rgba(249,115,22,0.10);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.10);
+  --critical-bg: rgba(220,38,38,0.14);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+html { background: var(--bg); }
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ===== LAYOUT ===== */
+.app {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+header h1 {
+  font-size: 1.5em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+header .stats {
+  display: flex;
+  gap: 16px;
+  font-size: 0.82em;
+  color: var(--muted);
+}
+
+header .stats span { display: flex; align-items: center; gap: 5px; }
+header .stats .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.toolbar select,
+.toolbar input[type="text"] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85em;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.toolbar select:focus,
+.toolbar input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+.toolbar input[type="text"] { width: 220px; }
+
+.toolbar .spacer { flex: 1; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 0.85em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn:hover { background: rgba(108,140,255,0.2); }
+.btn:active { transform: scale(0.97); }
+
+.btn.danger {
+  border-color: var(--red);
+  color: var(--red);
+  background: rgba(248,113,113,0.08);
+}
+.btn.danger:hover { background: rgba(248,113,113,0.18); }
+
+/* ===== TABLE ===== */
+.table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85em;
+}
+
+thead th {
+  background: var(--surface2);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.78em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+thead th:hover { color: var(--text); }
+thead th .sort-arrow { margin-left: 4px; font-size: 0.9em; }
+
+tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.12s;
+}
+
+tbody tr:hover { background: rgba(255,255,255,0.025); }
+tbody tr:last-child { border-bottom: none; }
+
+td {
+  padding: 11px 14px;
+  vertical-align: middle;
+}
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge.low    { background: var(--green-bg);    color: var(--green); }
+.badge.medium { background: var(--yellow-bg);   color: var(--yellow); }
+.badge.high   { background: var(--orange-bg);   color: var(--orange); }
+.badge.critical { background: var(--critical-bg); color: var(--red); }
+
+/* risk score */
+.risk-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9em;
+}
+
+.risk-score.low      { background: var(--green-bg);    color: var(--green); }
+.risk-score.medium   { background: var(--yellow-bg);   color: var(--yellow); }
+.risk-score.high     { background: var(--orange-bg);   color: var(--orange); }
+.risk-score.critical { background: var(--critical-bg); color: var(--red); }
+
+/* status */
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85em;
+}
+
+.status-dot::before {
+  content: "";
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.open::before      { background: var(--red); }
+.status-dot.mitigating::before { background: var(--yellow); }
+.status-dot.closed::before    { background: var(--green); }
+.status-dot.accepted::before  { background: var(--muted); }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--muted);
+}
+
+.empty-state p { font-size: 0.95em; }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 28px 20px;
+  width: 520px;
+  max-width: 94vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.modal h2 {
+  font-size: 1.15em;
+  margin-bottom: 20px;
+}
+
+.modal label {
+  display: block;
+  font-size: 0.8em;
+  color: var(--muted);
+  margin-bottom: 4px;
+  margin-top: 14px;
+}
+
+.modal label:first-of-type { margin-top: 0; }
+
+.modal input,
+.modal select,
+.modal textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9em;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus {
+  border-color: var(--accent);
+}
+
+.modal textarea { resize: vertical; min-height: 70px; }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.btn-secondary {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-secondary:hover { background: var(--surface2); color: var(--text); }
+
+.actions-cell {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn {
+  width: 30px; height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 1em;
+  transition: background 0.12s, color 0.12s;
+}
+
+.icon-btn:hover { background: var(--surface2); color: var(--text); }
+.icon-btn.del:hover { color: var(--red); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .table-wrap { overflow-x: auto; }
+  table { min-width: 800px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header>
+    <h1>Риск-реестр проекта</h1>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Поиск по названию...">
+    <select id="filterStatus">
+      <option value="">Все статусы</option>
+      <option value="open">Открыт</option>
+      <option value="mitigating">Митигация</option>
+      <option value="accepted">Принят</option>
+      <option value="closed">Закрыт</option>
+    </select>
+    <select id="filterProbability">
+      <option value="">Все вероятности</option>
+      <option value="1">Низкая</option>
+      <option value="2">Средняя</option>
+      <option value="3">Высокая</option>
+    </select>
+    <select id="filterImpact">
+      <option value="">Все влияния</option>
+      <option value="1">Низкое</option>
+      <option value="2">Среднее</option>
+      <option value="3">Высокое</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn" onclick="openModal()">+ Добавить риск</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="name">Риск <span class="sort-arrow"></span></th>
+          <th data-sort="probability">Вероятность <span class="sort-arrow"></span></th>
+          <th data-sort="impact">Влияние <span class="sort-arrow"></span></th>
+          <th data-sort="score">Уровень <span class="sort-arrow"></span></th>
+          <th data-sort="mitigation">План митигации <span class="sort-arrow"></span></th>
+          <th data-sort="owner">Ответственный <span class="sort-arrow"></span></th>
+          <th data-sort="status">Статус <span class="sort-arrow"></span></th>
+          <th style="width:70px"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <p>Нет рисков, соответствующих фильтрам</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Добавить риск</h2>
+    <input type="hidden" id="editId">
+
+    <label for="rName">Название риска</label>
+    <input type="text" id="rName" placeholder="Недоступность сервера">
+
+    <label for="rProbability">Вероятность</label>
+    <select id="rProbability">
+      <option value="1">Низкая</option>
+      <option value="2" selected>Средняя</option>
+      <option value="3">Высокая</option>
+    </select>
+
+    <label for="rImpact">Влияние</label>
+    <select id="rImpact">
+      <option value="1">Низкое</option>
+      <option value="2" selected>Среднее</option>
+      <option value="3">Высокое</option>
+    </select>
+
+    <label for="rMitigation">План митигации</label>
+    <textarea id="rMitigation" placeholder="Описание мер по снижению риска..."></textarea>
+
+    <label for="rOwner">Ответственный</label>
+    <input type="text" id="rOwner" placeholder="Иванов А.С.">
+
+    <label for="rStatus">Статус</label>
+    <select id="rStatus">
+      <option value="open">Открыт</option>
+      <option value="mitigating">Митигация</option>
+      <option value="accepted">Принят</option>
+      <option value="closed">Закрыт</option>
+    </select>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn" onclick="saveRisk()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+const STORAGE_KEY = 'risk-register-data';
+
+const PROB_LABELS  = { 1: 'Низкая',  2: 'Средняя',  3: 'Высокая' };
+const IMP_LABELS   = { 1: 'Низкое',  2: 'Среднее',  3: 'Высокое' };
+const STATUS_LABELS = { open: 'Открыт', mitigating: 'Митигация', accepted: 'Принят', closed: 'Закрыт' };
+
+function scoreBadge(score) {
+  if (score <= 2) return 'low';
+  if (score <= 4) return 'medium';
+  if (score <= 6) return 'high';
+  return 'critical';
+}
+
+function probBadge(v) { return v == 1 ? 'low' : v == 2 ? 'medium' : 'high'; }
+function impBadge(v)  { return v == 1 ? 'low' : v == 2 ? 'medium' : 'high'; }
+
+const defaultRisks = [
+  { id: 1, name: 'Недоступность основного сервера', probability: 3, impact: 3, mitigation: 'Настроить автоматический failover на резервный сервер. Мониторинг uptime каждые 30 сек.', owner: 'Петров Д.А.', status: 'open' },
+  { id: 2, name: 'Утечка персональных данных', probability: 2, impact: 3, mitigation: 'Шифрование данных at rest и in transit. Аудит доступов ежемесячно. DLP-система.', owner: 'Сидорова Е.В.', status: 'mitigating' },
+  { id: 3, name: 'Уход ключевого разработчика', probability: 2, impact: 2, mitigation: 'Документирование кода и процессов. Bus factor > 2 для каждого модуля.', owner: 'Козлов И.П.', status: 'open' },
+  { id: 4, name: 'Срыв сроков из-за внешнего подрядчика', probability: 3, impact: 2, mitigation: 'Промежуточные контрольные точки каждые 2 недели. Резервный подрядчик определён.', owner: 'Иванова М.К.', status: 'accepted' },
+  { id: 5, name: 'Превышение бюджета на инфраструктуру', probability: 2, impact: 1, mitigation: 'Еженедельный мониторинг расходов. Алерты при превышении 80% лимита.', owner: 'Белов А.Н.', status: 'closed' },
+  { id: 6, name: 'Несовместимость обновления библиотеки', probability: 1, impact: 2, mitigation: 'Фиксация версий в lock-файле. Обновления только через staging-окружение.', owner: 'Петров Д.А.', status: 'closed' },
+];
+
+let risks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultRisks;
+let nextId = risks.reduce((max, r) => Math.max(max, r.id), 0) + 1;
+let sortCol = 'score';
+let sortAsc = false;
+
+/* ===== PERSIST ===== */
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(risks)); }
+
+/* ===== RENDER ===== */
+function render() {
+  let filtered = risks.filter(r => {
+    const search = document.getElementById('search').value.toLowerCase();
+    const fStatus = document.getElementById('filterStatus').value;
+    const fProb = document.getElementById('filterProbability').value;
+    const fImp = document.getElementById('filterImpact').value;
+
+    if (search && !r.name.toLowerCase().includes(search)) return false;
+    if (fStatus && r.status !== fStatus) return false;
+    if (fProb && r.probability != fProb) return false;
+    if (fImp && r.impact != fImp) return false;
+    return true;
+  });
+
+  // sort
+  filtered.sort((a, b) => {
+    let va, vb;
+    if (sortCol === 'score') {
+      va = a.probability * a.impact;
+      vb = b.probability * b.impact;
+    } else if (sortCol === 'probability' || sortCol === 'impact') {
+      va = a[sortCol]; vb = b[sortCol];
+    } else {
+      va = (a[sortCol] || '').toString().toLowerCase();
+      vb = (b[sortCol] || '').toString().toLowerCase();
+    }
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  // update sort arrows
+  document.querySelectorAll('thead th[data-sort]').forEach(th => {
+    const arrow = th.querySelector('.sort-arrow');
+    if (th.dataset.sort === sortCol) {
+      arrow.textContent = sortAsc ? '↑' : '↓';
+    } else {
+      arrow.textContent = '';
+    }
+  });
+
+  const tbody = document.getElementById('tbody');
+  const emptyState = document.getElementById('emptyState');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    emptyState.style.display = 'block';
+  } else {
+    emptyState.style.display = 'none';
+    tbody.innerHTML = filtered.map(r => {
+      const score = r.probability * r.impact;
+      return `<tr>
+        <td><strong>${esc(r.name)}</strong></td>
+        <td><span class="badge ${probBadge(r.probability)}">${PROB_LABELS[r.probability]}</span></td>
+        <td><span class="badge ${impBadge(r.impact)}">${IMP_LABELS[r.impact]}</span></td>
+        <td><span class="risk-score ${scoreBadge(score)}">${score}</span></td>
+        <td style="max-width:260px;color:var(--muted);font-size:0.92em">${esc(r.mitigation)}</td>
+        <td>${esc(r.owner)}</td>
+        <td><span class="status-dot ${r.status}">${STATUS_LABELS[r.status]}</span></td>
+        <td>
+          <div class="actions-cell">
+            <button class="icon-btn" title="Редактировать" onclick="editRisk(${r.id})">&#9998;</button>
+            <button class="icon-btn del" title="Удалить" onclick="deleteRisk(${r.id})">&#10005;</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // stats
+  const open = risks.filter(r => r.status === 'open').length;
+  const mitigating = risks.filter(r => r.status === 'mitigating').length;
+  const closed = risks.filter(r => r.status === 'closed').length;
+  document.getElementById('stats').innerHTML = `
+    <span><span class="dot" style="background:var(--red)"></span> Открытых: ${open}</span>
+    <span><span class="dot" style="background:var(--yellow)"></span> Митигация: ${mitigating}</span>
+    <span><span class="dot" style="background:var(--green)"></span> Закрытых: ${closed}</span>
+    <span>Всего: ${risks.length}</span>
+  `;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+/* ===== SORT ===== */
+document.querySelectorAll('thead th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (sortCol === col) { sortAsc = !sortAsc; }
+    else { sortCol = col; sortAsc = true; }
+    render();
+  });
+});
+
+/* ===== FILTERS ===== */
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('filterStatus').addEventListener('change', render);
+document.getElementById('filterProbability').addEventListener('change', render);
+document.getElementById('filterImpact').addEventListener('change', render);
+
+/* ===== MODAL ===== */
+function openModal(id) {
+  document.getElementById('modalOverlay').classList.add('active');
+  if (id) {
+    const r = risks.find(x => x.id === id);
+    document.getElementById('modalTitle').textContent = 'Редактировать риск';
+    document.getElementById('editId').value = id;
+    document.getElementById('rName').value = r.name;
+    document.getElementById('rProbability').value = r.probability;
+    document.getElementById('rImpact').value = r.impact;
+    document.getElementById('rMitigation').value = r.mitigation;
+    document.getElementById('rOwner').value = r.owner;
+    document.getElementById('rStatus').value = r.status;
+  } else {
+    document.getElementById('modalTitle').textContent = 'Добавить риск';
+    document.getElementById('editId').value = '';
+    document.getElementById('rName').value = '';
+    document.getElementById('rProbability').value = '2';
+    document.getElementById('rImpact').value = '2';
+    document.getElementById('rMitigation').value = '';
+    document.getElementById('rOwner').value = '';
+    document.getElementById('rStatus').value = 'open';
+  }
+  document.getElementById('rName').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+function saveRisk() {
+  const name = document.getElementById('rName').value.trim();
+  if (!name) { document.getElementById('rName').focus(); return; }
+
+  const data = {
+    name,
+    probability: parseInt(document.getElementById('rProbability').value),
+    impact: parseInt(document.getElementById('rImpact').value),
+    mitigation: document.getElementById('rMitigation').value.trim(),
+    owner: document.getElementById('rOwner').value.trim(),
+    status: document.getElementById('rStatus').value,
+  };
+
+  const editId = document.getElementById('editId').value;
+  if (editId) {
+    const r = risks.find(x => x.id === parseInt(editId));
+    Object.assign(r, data);
+  } else {
+    data.id = nextId++;
+    risks.push(data);
+  }
+
+  save();
+  closeModal();
+  render();
+}
+
+function editRisk(id) { openModal(id); }
+
+function deleteRisk(id) {
+  if (!confirm('Удалить этот риск?')) return;
+  risks = risks.filter(r => r.id !== id);
+  save();
+  render();
+}
+
+/* ===== INIT ===== */
+render();
+</script>
+</body>
+</html>

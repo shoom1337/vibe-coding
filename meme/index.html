@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вайбкодинг-счётчик отчаяния</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0f;
+  --card: #12121a;
+  --border: #1e1e2e;
+  --text: #e8e8f0;
+  --muted: #6b6b80;
+  --glow: #a855f7;
+  --glow2: #ec4899;
+  --glow3: #f97316;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ===== BACKGROUND PARTICLES ===== */
+.bg-blur {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-blur.a { width: 500px; height: 500px; background: var(--glow); top: -10%; left: -10%; }
+.bg-blur.b { width: 400px; height: 400px; background: var(--glow2); bottom: -8%; right: -8%; }
+.bg-blur.c { width: 300px; height: 300px; background: var(--glow3); top: 40%; left: 60%; opacity: 0.08; }
+
+/* ===== MAIN LAYOUT ===== */
+.container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px;
+  width: 100%;
+  max-width: 620px;
+}
+
+/* ===== WORLD TICKER ===== */
+.world-ticker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(168,85,247,0.25);
+  background: rgba(168,85,247,0.06);
+  font-size: 0.72em;
+  color: #c4b5fd;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+  white-space: nowrap;
+}
+
+.world-ticker .pulse {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #a855f7;
+  box-shadow: 0 0 0 0 rgba(168,85,247,0.6);
+  animation: pulse-ring 1.5s infinite;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(168,85,247,0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(168,85,247,0); }
+  100% { box-shadow: 0 0 0 0 rgba(168,85,247,0); }
+}
+
+.world-number {
+  font-weight: 800;
+  color: #e9d5ff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== HEADER ===== */
+.header-q {
+  font-size: clamp(1em, 3.5vw, 1.3em);
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+
+/* ===== BIG NUMBER ===== */
+.counter-display {
+  position: relative;
+  user-select: none;
+}
+
+.big-number {
+  font-size: clamp(6em, 22vw, 11em);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #e2e2f0 0%, #a855f7 50%, #ec4899 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: transform 0.08s;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.big-number.bump { transform: scale(1.06); }
+
+/* ===== DESPAIR LEVEL ===== */
+.despair-bar {
+  width: 100%;
+  max-width: 380px;
+  margin: 4px auto 2px;
+}
+
+.despair-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7em;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.despair-track {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+
+.despair-fill {
+  height: 100%;
+  border-radius: 99px;
+  width: 0%;
+  transition: width 0.4s ease, background 0.4s;
+  background: linear-gradient(90deg, #a855f7, #ec4899);
+}
+
+.despair-status {
+  text-align: center;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-top: 8px;
+  min-height: 1.4em;
+  transition: color 0.3s;
+}
+
+/* ===== THE BUTTON ===== */
+.hit-btn {
+  margin-top: 10px;
+  width: clamp(200px, 60vw, 320px);
+  padding: 18px 32px;
+  border: 2px solid rgba(168,85,247,0.5);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(168,85,247,0.12), rgba(236,72,153,0.08));
+  color: #e2d4f8;
+  font-family: inherit;
+  font-size: 1.1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.hit-btn:hover {
+  border-color: rgba(168,85,247,0.8);
+  box-shadow: 0 0 30px rgba(168,85,247,0.15);
+}
+
+.hit-btn:active {
+  transform: scale(0.96);
+}
+
+.hit-btn .sub {
+  display: block;
+  font-size: 0.6em;
+  font-weight: 400;
+  color: #9b8ab8;
+  margin-top: 4px;
+}
+
+/* ===== SARCASTIC QUOTE ===== */
+.quote-box {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 16px;
+  margin-top: 8px;
+}
+
+.quote-text {
+  font-size: 0.88em;
+  color: #a898c0;
+  line-height: 1.5;
+  max-width: 480px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.35s, transform 0.35s;
+}
+
+.quote-text.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== ACHIEVEMENTS ===== */
+.achievement {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--card);
+  border: 1px solid rgba(168,85,247,0.35);
+  border-radius: 14px;
+  padding: 14px 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 320px;
+}
+
+.achievement.show { transform: translateX(0); }
+
+.achievement .ach-icon { font-size: 1.6em; flex-shrink: 0; }
+
+.achievement .ach-body { font-size: 0.78em; }
+.achievement .ach-title { font-weight: 700; color: #e9d5ff; }
+.achievement .ach-desc { color: var(--muted); margin-top: 2px; }
+
+/* ===== FLOAT NUMBERS ===== */
+.float-num {
+  position: fixed;
+  font-weight: 800;
+  font-size: 1.6em;
+  color: rgba(168,85,247,0.5);
+  pointer-events: none;
+  z-index: 10;
+  animation: float-up 1.2s ease-out forwards;
+}
+
+@keyframes float-up {
+  0%   { opacity: 0.8; transform: translateY(0) scale(1); }
+  100% { opacity: 0;   transform: translateY(-120px) scale(0.6); }
+}
+
+/* ===== RESET ===== */
+.reset-link {
+  position: fixed;
+  bottom: 16px;
+  right: 20px;
+  font-size: 0.68em;
+  color: #3a3a4a;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+  z-index: 5;
+}
+
+.reset-link:hover { color: var(--muted); }
+
+/* ===== SCREEN SHAKE ===== */
+.shake { animation: shake 0.3s ease; }
+@keyframes shake {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-2px, 1px); }
+  80% { transform: translate(2px, -1px); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 500px) {
+  .achievement { right: 10px; left: 10px; max-width: unset; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-blur a"></div>
+<div class="bg-blur b"></div>
+<div class="bg-blur c"></div>
+
+<div class="container">
+
+  <div class="world-ticker">
+    <span class="pulse"></span>
+    В мире сейчас: <span class="world-number" id="worldNum">0</span> упоминаний «вайбкодинг» за сегодня
+  </div>
+
+  <p class="header-q">Сколько раз сегодня ты услышал<br>слово «вайбкодинг»?</p>
+
+  <div class="counter-display">
+    <div class="big-number" id="bigNum">0</div>
+  </div>
+
+  <div class="despair-bar">
+    <div class="despair-label">
+      <span>Уровень отчаяния</span>
+      <span id="despairPct">0%</span>
+    </div>
+    <div class="despair-track">
+      <div class="despair-fill" id="despairFill"></div>
+    </div>
+    <div class="despair-status" id="despairStatus">Всё нормально. Пока.</div>
+  </div>
+
+  <button class="hit-btn" id="hitBtn">
+    Я опять это услышал
+    <span class="sub">нажми каждый раз, когда слышишь</span>
+  </button>
+
+  <div class="quote-box">
+    <p class="quote-text" id="quoteText"></p>
+  </div>
+
+</div>
+
+<div class="achievement" id="achievement">
+  <span class="ach-icon" id="achIcon"></span>
+  <div class="ach-body">
+    <div class="ach-title" id="achTitle"></div>
+    <div class="ach-desc" id="achDesc"></div>
+  </div>
+</div>
+
+<a class="reset-link" id="resetLink">сбросить счётчик</a>
+
+<script>
+/* ===== QUOTES ===== */
+const quotes = [
+  "Через 5 минут тебе предложат «просто завайбкодить» квартальный отчёт.",
+  "Где-то в мире менеджер только что сказал: «А давайте завайбкодим CRM».",
+  "Помни: каждый раз, когда кто-то говорит «вайбкодинг», один джуниор теряет оффер.",
+  "Андрей Карпатый не предполагал, что это зайдёт ТАК далеко.",
+  "Уже продаются курсы «Вайбкодинг для вайбкодеров». За $299.",
+  "LinkedIn полон постов: «Как я уволил 40 разработчиков и завайбкодил всё сам».",
+  "Твоя бабушка скоро спросит: «А ты вайбкодишь?»",
+  "На собесах спрашивают: «Оцените свой уровень вайба от 1 до 10».",
+  "В резюме уже пишут: Senior Vibe Engineer, 2 years of vibing experience.",
+  "Скоро на Хабре: «Почему вайбкодинг убьёт / не убьёт / уже убил программирование».",
+  "Кто-то только что завайбкодил приложение, которое считает, сколько раз сказали «вайбкодинг». Мета.",
+  "Если бы за каждое «вайбкодинг» давали рубль, ты бы уже закрыл ипотеку.",
+  "Через год будет Вайбкодинг-конференция. С мерчом. И стикерами.",
+  "HR-ы уже добавили «vibe coding» в список ключевых компетенций.",
+  "Твой тимлид сейчас гуглит «vibe coding best practices enterprise».",
+  "На Product Hunt запустили AI, который вайбкодит другие AI, которые вайбкодят.",
+  "Дизайнер: «Я не кодер, я вайбкодер». Разница? Никто не знает.",
+  "Stack Overflow переименовывается в Vibe Overflow. Шутка? Может быть.",
+  "В Jira появился новый статус задачи: «Vibing».",
+  "Инвестор: «А есть ли у вас вайб? Покажите ваш вайб-план».",
+  "Утренний стендап: «Вчера я вайбкодил, сегодня буду вайбкодить, блокеров нет».",
+  "Кто-то только что назвал Excel-макрос вайбкодингом. И получил повышение.",
+  "«Мы не пишем код. Мы вайбим. Это другое.» — CTO стартапа, 2025",
+  "Скоро будет ISO-стандарт вайбкодинга. ISO 42069:2025.",
+  "Ты ещё сопротивляешься. Но вайб неизбежен.",
+  "Осталось три стадии: торг, депрессия и вайбкодинг.",
+  "Минздрав предупреждает: чрезмерное вайбкодирование вредит вашему коду.",
+  "«Наш продукт полностью завайбкожен» — и это считается преимуществом.",
+  "В университетах открывают кафедру вайбкодинга. Грант от OpenAI.",
+  "Ребёнок в школе: «Мам, нам задали завайбкодить домашку по математике».",
+];
+
+/* ===== DESPAIR LEVELS ===== */
+const despairLevels = [
+  { min: 0,  label: "Всё нормально. Пока.",              color: "#a3a3b8" },
+  { min: 3,  label: "Лёгкое раздражение",                 color: "#a78bfa" },
+  { min: 6,  label: "Глаз начинает дёргаться",            color: "#c084fc" },
+  { min: 10, label: "Вздрагиваешь при слове на «В»",      color: "#e879f9" },
+  { min: 15, label: "Хочется выключить Slack навсегда",    color: "#f472b6" },
+  { min: 20, label: "Обнимаешь мануал по C++ и плачешь",  color: "#fb7185" },
+  { min: 30, label: "Экзистенциальный кризис",             color: "#f97316" },
+  { min: 40, label: "Серьёзно рассматриваешь пчеловодство", color: "#ef4444" },
+  { min: 50, label: "Пора в лес. Без интернета. Навсегда.", color: "#dc2626" },
+  { min: 75, label: "ТЫ И ЕСТЬ ВАЙБКОДИНГ",               color: "#ff0044" },
+];
+
+/* ===== ACHIEVEMENTS ===== */
+const achievements = [
+  { at: 1,   icon: "👶", title: "Первый контакт",          desc: "Добро пожаловать в ад." },
+  { at: 5,   icon: "😤", title: "Это не случайность",      desc: "5 раз — это уже тренд." },
+  { at: 10,  icon: "🫠", title: "Двузначное число",         desc: "Ты официально в зоне поражения." },
+  { at: 15,  icon: "🔇", title: "Mute All",                 desc: "Наушники уже не спасают." },
+  { at: 25,  icon: "📉", title: "Продуктивность: 0",       desc: "Ты больше считаешь вайбы, чем работаешь." },
+  { at: 42,  icon: "🌌", title: "Ответ на всё",             desc: "42. Но вопрос был не тот." },
+  { at: 50,  icon: "🏚️", title: "Отшельник",               desc: "Домик в тайге выглядит всё привлекательнее." },
+  { at: 69,  icon: "😏", title: "Nice.",                     desc: "Ну ты понял." },
+  { at: 100, icon: "💀", title: "Сотня",                    desc: "Ты — статистическая аномалия." },
+  { at: 150, icon: "🐝", title: "Пчеловод",                 desc: "Пчёлы не говорят «вайбкодинг». Переезжай к ним." },
+  { at: 200, icon: "👁️", title: "Вайб смотрит в тебя",     desc: "Когда смотришь в вайб — вайб смотрит в тебя." },
+  { at: 500, icon: "🏆", title: "Легенда",                  desc: "500. Ты либо врёшь, либо работаешь в стартапе." },
+];
+
+/* ===== STATE ===== */
+const STORAGE_KEY = 'vibecoding-despair';
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (s.day !== todayKey()) return null;
+    return s;
+  } catch { return null; }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    day: todayKey(),
+    count: count,
+    shownAchievements: [...shownAchievements],
+  }));
+}
+
+let state = loadState();
+let count = state ? state.count : 0;
+let shownAchievements = new Set(state ? state.shownAchievements : []);
+let lastQuoteIdx = -1;
+
+/* ===== DOM ===== */
+const bigNum = document.getElementById('bigNum');
+const despairFill = document.getElementById('despairFill');
+const despairPct = document.getElementById('despairPct');
+const despairStatus = document.getElementById('despairStatus');
+const quoteText = document.getElementById('quoteText');
+const hitBtn = document.getElementById('hitBtn');
+const worldNumEl = document.getElementById('worldNum');
+const achEl = document.getElementById('achievement');
+
+/* ===== WORLD COUNTER ===== */
+let worldBase = 2_847_000 + Math.floor(Math.random() * 200_000);
+let worldNum = worldBase;
+
+function tickWorld() {
+  worldNum += Math.floor(Math.random() * 7) + 1;
+  worldNumEl.textContent = worldNum.toLocaleString('ru-RU');
+}
+
+setInterval(tickWorld, 800 + Math.random() * 600);
+tickWorld();
+
+/* ===== RENDER ===== */
+function render() {
+  bigNum.textContent = count;
+
+  const maxDespair = 100;
+  const pct = Math.min(100, Math.round((count / maxDespair) * 100));
+  despairFill.style.width = pct + '%';
+  despairPct.textContent = pct + '%';
+
+  let level = despairLevels[0];
+  for (const l of despairLevels) {
+    if (count >= l.min) level = l;
+  }
+  despairStatus.textContent = level.label;
+  despairStatus.style.color = level.color;
+  despairFill.style.background = `linear-gradient(90deg, #a855f7, ${level.color})`;
+}
+
+/* ===== RANDOM QUOTE ===== */
+function showQuote() {
+  let idx;
+  do { idx = Math.floor(Math.random() * quotes.length); } while (idx === lastQuoteIdx && quotes.length > 1);
+  lastQuoteIdx = idx;
+
+  quoteText.classList.remove('visible');
+  setTimeout(() => {
+    quoteText.textContent = quotes[idx];
+    quoteText.classList.add('visible');
+  }, 80);
+}
+
+/* ===== FLOAT +1 ===== */
+function spawnFloat(x, y) {
+  const el = document.createElement('div');
+  el.className = 'float-num';
+  el.textContent = '+1';
+  el.style.left = (x - 12) + 'px';
+  el.style.top = (y - 20) + 'px';
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+/* ===== ACHIEVEMENT ===== */
+let achTimer = null;
+
+function showAchievement(a) {
+  document.getElementById('achIcon').textContent = a.icon;
+  document.getElementById('achTitle').textContent = a.title;
+  document.getElementById('achDesc').textContent = a.desc;
+  achEl.classList.add('show');
+
+  if (achTimer) clearTimeout(achTimer);
+  achTimer = setTimeout(() => achEl.classList.remove('show'), 3500);
+}
+
+/* ===== CLICK ===== */
+function handleClick(e) {
+  count++;
+  saveState();
+  render();
+  showQuote();
+
+  // bump animation
+  bigNum.classList.add('bump');
+  setTimeout(() => bigNum.classList.remove('bump'), 100);
+
+  // float +1
+  const rect = hitBtn.getBoundingClientRect();
+  const fx = rect.left + rect.width * (0.3 + Math.random() * 0.4);
+  const fy = rect.top - 10;
+  spawnFloat(fx, fy);
+
+  // screen shake at high counts
+  if (count >= 30 && count % 5 === 0) {
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), 300);
+  }
+
+  // achievements
+  for (const a of achievements) {
+    if (count === a.at && !shownAchievements.has(a.at)) {
+      shownAchievements.add(a.at);
+      saveState();
+      showAchievement(a);
+      break;
+    }
+  }
+}
+
+hitBtn.addEventListener('click', handleClick);
+
+/* Keyboard: space or enter */
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'Enter') {
+    if (e.target === hitBtn || e.target === document.body) {
+      e.preventDefault();
+      hitBtn.click();
+    }
+  }
+});
+
+/* ===== RESET ===== */
+document.getElementById('resetLink').addEventListener('click', () => {
+  if (!confirm('Обнулить счётчик? Новый день — новые вайбы.')) return;
+  count = 0;
+  shownAchievements.clear();
+  saveState();
+  render();
+  quoteText.classList.remove('visible');
+});
+
+/* ===== INIT ===== */
+render();
+if (count > 0) showQuote();
+</script>
+</body>
+</html>
