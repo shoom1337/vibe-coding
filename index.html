@@ -207,37 +207,30 @@ body {
 
 /* ===== THE BUTTON ===== */
 .hit-btn {
-  margin-top: 28px;
-  width: clamp(200px, 60vw, 320px);
-  padding: 18px 32px;
+  margin-top: 20px;
+  width: 72px;
+  height: 72px;
   border: 2px solid rgba(239,49,36,0.5);
-  border-radius: 18px;
-  background: linear-gradient(145deg, rgba(239,49,36,0.12), rgba(255,107,94,0.08));
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(239,49,36,0.14), rgba(255,107,94,0.08));
   color: #ffd8d4;
   font-family: inherit;
-  font-size: 1.1em;
-  font-weight: 700;
+  font-size: 1.3em;
+  font-weight: 800;
   cursor: pointer;
   transition: transform 0.1s, box-shadow 0.2s, border-color 0.2s;
-  position: relative;
-  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 0;
 }
 
 .hit-btn:hover {
   border-color: rgba(239,49,36,0.8);
-  box-shadow: 0 0 30px rgba(239,49,36,0.15);
+  box-shadow: 0 0 30px rgba(239,49,36,0.2);
 }
 
 .hit-btn:active {
-  transform: scale(0.96);
-}
-
-.hit-btn .sub {
-  display: block;
-  font-size: 0.6em;
-  font-weight: 400;
-  color: #b89a9a;
-  margin-top: 4px;
+  transform: scale(0.92);
 }
 
 /* ===== SARCASTIC QUOTE ===== */
@@ -345,7 +338,7 @@ body {
   .container { padding: 16px; gap: 4px; }
   .world-ticker { font-size: 0.68em; padding: 8px 14px; }
   .header-q { font-size: clamp(1em, 4.5vw, 1.3em); }
-  .hit-btn { width: 90%; font-size: 1.15em; padding: 20px 24px; }
+  .hit-btn { width: 80px; height: 80px; font-size: 1.4em; }
   .quote-box { margin-top: 14px; padding: 14px 16px; }
   .achievement { right: 10px; left: 10px; max-width: unset; }
 }
@@ -380,14 +373,11 @@ body {
     <div class="despair-status" id="despairStatus">Всё нормально. Пока.</div>
   </div>
 
-  <button class="hit-btn" id="hitBtn">
-    Я опять это услышал
-    <span class="sub">нажми каждый раз, когда слышишь</span>
-  </button>
-
   <div class="quote-box">
     <p class="quote-text" id="quoteText"></p>
   </div>
+
+  <button class="hit-btn" id="hitBtn">+1</button>
 
 </div>
 
