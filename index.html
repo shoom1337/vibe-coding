@@ -363,11 +363,6 @@ body {
     <span class="brand-text"><span class="brand-a">A?.</span>Frontend Community</span>
   </a>
 
-  <div class="world-ticker">
-    <span class="pulse"></span>
-    В мире сейчас: <span class="world-number" id="worldNum">0</span> упоминаний «вайбкодинг» за сегодня
-  </div>
-
   <p class="header-q">Сколько раз сегодня ты услышал<br>слово «вайбкодинг»?</p>
 
   <div class="counter-display">
@@ -598,20 +593,7 @@ const despairPct = document.getElementById('despairPct');
 const despairStatus = document.getElementById('despairStatus');
 const quoteText = document.getElementById('quoteText');
 const hitBtn = document.getElementById('hitBtn');
-const worldNumEl = document.getElementById('worldNum');
 const achEl = document.getElementById('achievement');
-
-/* ===== WORLD COUNTER ===== */
-let worldBase = 2_847_000 + Math.floor(Math.random() * 200_000);
-let worldNum = worldBase;
-
-function tickWorld() {
-  worldNum += Math.floor(Math.random() * 7) + 1;
-  worldNumEl.textContent = worldNum.toLocaleString('ru-RU');
-}
-
-setInterval(tickWorld, 800 + Math.random() * 600);
-tickWorld();
 
 /* ===== RENDER ===== */
 function render() {
